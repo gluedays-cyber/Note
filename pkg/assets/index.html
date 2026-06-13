@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>StyledText Editor</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- 좌측: StyledText 에디터 -->
+        <div class="left-panel">
+            <div class="editor-header">
+                <div class="editor-title" id="file-title">이름없는 텍스트</div>
+                <div class="editor-menu">
+                    <button class="menu-btn" onclick="triggerNewFile()" title="새 파일">새 파일</button>
+                    <button class="menu-btn" onclick="triggerLoadFile()" title="파일 불러오기 (Ctrl+O)">불러오기</button>
+                    <button class="menu-btn" onclick="triggerSaveFile()" title="파일 저장 (Ctrl+S)">저장</button>
+                </div>
+            </div>
+            <textarea id="editor" placeholder="여기에 텍스트를 입력하세요..." spellcheck="false"></textarea>
+        </div>
+        
+        <!-- 우측: AIWriter 영역 -->
+        <div class="right-panel">
+            <div class="ai-header">
+                <div class="ai-title">AI Assistant</div>
+                <div class="ai-toggle-container">
+                    <button id="ai-btn-md" class="toggle-btn active" onclick="toggleAiView('md')">MD</button>
+                    <button id="ai-btn-src" class="toggle-btn" onclick="toggleAiView('src')">SRC</button>
+                </div>
+            </div>
+            <div class="ai-main-container">
+                <div id="ai-preview-md" class="markdown-body"></div>
+                <textarea id="ai-preview-src" placeholder="" spellcheck="false" style="display: none;"></textarea>
+            </div>
+
+            <div id="ai-error-banner" class="ai-error-banner">
+                ❌ API 키 또는 네트워크 오류가 발생하여 AI 기능을 사용할 수 없다.
+            </div>
+
+            <div class="ai-prompt-container">
+                <div class="model-info-row">
+                    <select id="model-select" class="model-dropdown"><option value="">⚠️ 모델 미설정</option></select>
+                    <button id="api-key-setup-btn" class="gear-btn" title="API 및 모델 설정">⚙️</button>
+                </div>
+                <textarea id="ai-promptInput" placeholder="AI에게 지시할 내용을 입력하세요 (Enter 전송)" spellcheck="false"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- 단어 해석 팝업창 -->
+    <div id="word-modal" class="modal">
+        <div class="modal-content" style="width: 450px; max-width: 90%;">
+            <div class="modal-header">
+                <h2 id="word-modal-title">단어 해석</h2>
+                <span class="modal-close" onclick="closeWordModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                <div id="word-modal-content" class="markdown-body" style="padding: 0;"></div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+                <span id="word-modal-model" style="font-size: 11px; color: #888; font-weight: normal;"></span>
+                <button class="modal-btn confirm-btn" onclick="closeWordModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API 키 및 모델 설정 모달창 -->
+    <div id="api-key-modal" class="modal">
+        <div class="modal-content" style="width: 520px; max-width: 95%;">
+            <div class="modal-header">
+                <h2>API 키 및 모델 설정</h2>
+                <span id="api-key-close" class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto; gap: 16px;">
+                <!-- Google API Section -->
+                <div class="api-provider-section">
+                    <div class="api-section-title">Google API</div>
+                    <div class="input-group">
+                        <label for="google-api-key">API Key</label>
+                        <input type="password" id="google-api-key" placeholder="Google API Key 입력">
+                    </div>
+                    <div class="model-pair-row">
+                        <div class="input-group">
+                            <label for="google-model1-name">Model 1 Name</label>
+                            <input type="text" id="google-model1-name" placeholder="예: gemini-2.5-flash">
+                        </div>
+                        <div class="input-group">
+                            <label for="google-model1-alias">Model 1 Alias</label>
+                            <input type="text" id="google-model1-alias" placeholder="예: Gemini 2.5 Flash">
+                        </div>
+                    </div>
+                    <div class="model-pair-row">
+                        <div class="input-group">
+                            <label for="google-model2-name">Model 2 Name</label>
+                            <input type="text" id="google-model2-name" placeholder="예: gemini-2.5-pro">
+                        </div>
+                        <div class="input-group">
+                            <label for="google-model2-alias">Model 2 Alias</label>
+                            <input type="text" id="google-model2-alias" placeholder="예: Gemini 2.5 Pro">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groq API Section -->
+                <div class="api-provider-section">
+                    <div class="api-section-title">Groq API</div>
+                    <div class="input-group">
+                        <label for="groq-api-key">API Key</label>
+                        <input type="password" id="groq-api-key" placeholder="Groq API Key 입력">
+                    </div>
+                    <div class="model-pair-row">
+                        <div class="input-group">
+                            <label for="groq-model1-name">Model 1 Name</label>
+                            <input type="text" id="groq-model1-name" placeholder="예: llama-3.3-70b-versatile">
+                        </div>
+                        <div class="input-group">
+                            <label for="groq-model1-alias">Model 1 Alias</label>
+                            <input type="text" id="groq-model1-alias" placeholder="예: Llama 3.3 70B">
+                        </div>
+                    </div>
+                    <div class="model-pair-row">
+                        <div class="input-group">
+                            <label for="groq-model2-name">Model 2 Name</label>
+                            <input type="text" id="groq-model2-name" placeholder="예: deepseek-r1-distill-llama-70b">
+                        </div>
+                        <div class="input-group">
+                            <label for="groq-model2-alias">Model 2 Alias</label>
+                            <input type="text" id="groq-model2-alias" placeholder="예: DeepSeek R1 70B">
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button id="api-key-cancel" class="modal-btn cancel-btn">취소</button>
+                <button id="api-key-confirm" class="modal-btn confirm-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
