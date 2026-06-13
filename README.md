@@ -37,7 +37,13 @@ To build the executable, ensure you have [Go](https://go.dev/) installed.
    ```powershell
    go build -ldflags="-H windowsgui" -o Note.exe
    ```
-3. This generates `Note.exe` directly in the project root. Keep `Note.exe` in the same folder as the assets, or place it where you intend to run it, ensuring its path contains the required build structure.
+   or
+   ```
+   Remove-Item *.syso -ErrorAction SilentlyContinue
+   go-winres make --arch amd64 --in winres\winres.json
+   go build -ldflags="-H windowsgui" -o Note.exe
+   ```
+4. This generates `Note.exe` directly in the project root. Keep `Note.exe` in the same folder as the assets, or place it where you intend to run it, ensuring its path contains the required build structure.
 
 ---
 
